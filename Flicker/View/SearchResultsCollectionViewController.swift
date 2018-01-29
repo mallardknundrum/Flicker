@@ -29,6 +29,13 @@ class SearchResultsCollectionViewController: UICollectionViewController {
         super.viewDidLoad()
         collectionView?.collectionViewLayout = columnLayout
         collectionView?.contentInsetAdjustmentBehavior = .always
+        let backbutton = UIButton(type: .custom)
+        backbutton.setImage(#imageLiteral(resourceName: "backButton"), for: .normal) // Image can be downloaded from here below link
+        backbutton.setTitle("Back", for: .normal)
+        backbutton.setTitleColor(backbutton.tintColor, for: .normal) // You can change the TitleColor
+        backbutton.addTarget(self, action: #selector(backAction), for: .touchUpInside)
+        
+        self.navigationItem.leftBarButtonItem = UIBarButtonItem(customView: backbutton)
     }
 
     override func didReceiveMemoryWarning() {
@@ -44,6 +51,12 @@ class SearchResultsCollectionViewController: UICollectionViewController {
             let cell = sender as? UICollectionViewCell,
             let indexPath = self.collectionView?.indexPath(for: cell), let array = resultsArray {
             vc.photoMetaData = array[indexPath.row]
+            vc.navigationItem.hidesBackButton = false
+            print(vc.navigationController)
+            vc.navigationController?.setNavigationBarHidden(false, animated: true)
+            vc.navigationController?.setToolbarHidden(false, animated: true)
+            vc.navigationController?.navigationItem.backBarButtonItem?.isEnabled = true
+            vc.navigationController?.setToolbarItems([navigationItem.backBarButtonItem!], animated: true)
         }
     }
 
@@ -95,5 +108,9 @@ class SearchResultsCollectionViewController: UICollectionViewController {
     
     }
     */
+    
+    @objc func backAction() {
+        self.dismiss(animated: true, completion: nil)
+    }
 
 }

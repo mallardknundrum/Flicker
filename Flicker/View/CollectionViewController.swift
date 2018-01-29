@@ -14,21 +14,13 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
     
     var searchController: UISearchController?
     var photoMetaDataArray: [PhotoMetaData] = []
+    var backButton: UIBarButtonItem?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
         setUpSearchController()
-        guard let searchBarHeight = searchController?.searchBar.bounds.height else { return }
-        let columnLayout = ColumnFlowLayout(
-            cellsPerRow: UIDevice.current.userInterfaceIdiom == .phone ? 3 : 5,
-            minimumInteritemSpacing: 10,
-            minimumLineSpacing: 10,
-            sectionInset: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
-        )
-        
-        collectionView?.collectionViewLayout = columnLayout
-        collectionView?.contentInsetAdjustmentBehavior = .always
+        setUpCollectionView()
         let extras = "description,date_upload,date_taken,owner_name,last_update,tags,machine_tags,o_dims,views,media,path_alias,url_sq,url_l,url_o"
         let parameters = ["username": "Jeremiah", "extras": extras]
         NetworkController().performRequest(for: .getPopular, httpMethod: .Get, urlParameters: parameters, body: nil) { (data, error) in
@@ -101,10 +93,14 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
         searchController?.searchBar.sizeToFit()
         searchController?.hidesNavigationBarDuringPresentation = false
         navigationItem.searchController = searchController
+//        searchController?.searchResultsController?.navigationItem.backBarButtonItem?.isEnabled = true
+//        searchController?.searchResultsController?.navigationItem.hidesBackButton = false
+        
         definesPresentationContext = true
     }
     
     func updateSearchResults(for searchController: UISearchController) {
+        self.navigationItem.hidesBackButton = false
         if let resultsViewController = searchController.searchResultsController as? SearchResultsCollectionViewController, let searchTerm = searchController.searchBar.text {
             // call api to search for user
             let parameters = ["username": searchTerm]
@@ -141,5 +137,16 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
                 }
             })
         }
+    }
+    
+    func setUpCollectionView() {
+        let columnLayout = ColumnFlowLayout(
+            cellsPerRow: UIDevice.current.userInterfaceIdiom == .phone ? 3 : 5,
+            minimumInteritemSpacing: 10,
+            minimumLineSpacing: 10,
+            sectionInset: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
+        )
+        collectionView?.collectionViewLayout = columnLayout
+        collectionView?.contentInsetAdjustmentBehavior = .always
     }
 }

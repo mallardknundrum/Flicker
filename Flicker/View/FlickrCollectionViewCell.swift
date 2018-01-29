@@ -16,7 +16,7 @@ class FlickrCollectionViewCell: UICollectionViewCell {
     func setUpViews() {
         DispatchQueue.global().async {
             guard let photoMetaData = self.photoMetaData, let thumbnailURL = URL(string: photoMetaData.squareThumbnailURLString) else { return }
-            PhotoController.singleton.getPhoto(withURL: thumbnailURL, completion: { (image) in
+            PhotoMetaDataController.singleton.getPhoto(withURL: thumbnailURL, completion: { (image) in
                 if let image = image {
                     DispatchQueue.main.async {
                         self.imageView.image = image

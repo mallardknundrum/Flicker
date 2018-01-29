@@ -9,9 +9,9 @@
 import Foundation
 import UIKit
 
-class PhotoController {
+class PhotoMetaDataController {
     
-    static let singleton = PhotoController()
+    static let singleton = PhotoMetaDataController()
     
     let imageCache = NSCache<NSString, UIImage>()
     

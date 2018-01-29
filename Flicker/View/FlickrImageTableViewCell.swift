@@ -25,7 +25,7 @@ class FlickrImageTableViewCell: UITableViewCell {
     func setUpViews() {
         DispatchQueue.global().async {
             guard let urlString = self.imageURLString, let url = URL(string: urlString) else { return }
-            PhotoController.singleton.getPhoto(withURL: url) { (image) in
+            PhotoMetaDataController.singleton.getPhoto(withURL: url) { (image) in
                 DispatchQueue.main.async {
                     self.flickrImageView.image = image
                 }
