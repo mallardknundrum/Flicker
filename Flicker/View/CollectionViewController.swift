@@ -24,7 +24,7 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
             cellsPerRow: UIDevice.current.userInterfaceIdiom == .phone ? 3 : 5,
             minimumInteritemSpacing: 10,
             minimumLineSpacing: 10,
-            sectionInset: UIEdgeInsets(top: searchBarHeight + 10, left: 10, bottom: 10, right: 10)
+            sectionInset: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
         )
         
         collectionView?.collectionViewLayout = columnLayout
@@ -100,6 +100,7 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
         searchController?.searchResultsUpdater = self
         searchController?.searchBar.sizeToFit()
         searchController?.hidesNavigationBarDuringPresentation = false
+        navigationItem.searchController = searchController
         definesPresentationContext = true
     }
     

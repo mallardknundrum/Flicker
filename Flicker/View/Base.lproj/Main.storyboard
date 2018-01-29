@@ -188,7 +188,7 @@
                                 </constraints>
                                 <connections>
                                     <outlet property="imageView" destination="lig-dp-Wiz" id="vXT-Ng-hhS"/>
-                                    <segue destination="6hx-Tr-erB" kind="show" id="8b2-YV-ENz"/>
+                                    <segue destination="6hx-Tr-erB" kind="presentation" modalPresentationStyle="currentContext" id="8b2-YV-ENz"/>
                                 </connections>
                             </collectionViewCell>
                         </cells>

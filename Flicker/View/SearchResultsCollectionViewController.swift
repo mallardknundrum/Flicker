@@ -22,7 +22,7 @@ class SearchResultsCollectionViewController: UICollectionViewController {
         cellsPerRow: UIDevice.current.userInterfaceIdiom == .phone ? 3 : 5,
         minimumInteritemSpacing: 10,
         minimumLineSpacing: 10,
-        sectionInset: UIEdgeInsets(top: -55, left: 10, bottom: 10, right: 10)
+        sectionInset: UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
     )
     
     override func viewDidLoad() {
