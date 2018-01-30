@@ -21,16 +21,17 @@ class FlickerTests: XCTestCase {
         super.tearDown()
     }
     
-    func testExample() {
-        // This is an example of a functional test case.
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
+    func testPhotoMetaDataInit() {
+        let json = getJson()
+        guard let _ = PhotoMetaData(jsonDictionary: json) else { assertionFailure("initializer failed"); return }
     }
     
-    func testPerformanceExample() {
-        // This is an example of a performance test case.
-        self.measure {
-            // Put the code you want to measure the time of here.
-        }
+    func getJson() -> [String: Any] {
+        guard let bundlePath = Bundle.main.path(forResource: "TestJson", ofType: "json"),
+            let data = ( try? Data(contentsOf: URL(fileURLWithPath: bundlePath), options: .alwaysMapped)),
+        let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? [String: Any]
+            else { return [:] }
+        return json
     }
     
 }

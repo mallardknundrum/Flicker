@@ -12,11 +12,14 @@ import UIKit
 class PhotoMetaDataController {
     
     static let singleton = PhotoMetaDataController()
-    
     let imageCache = NSCache<NSString, UIImage>()
     
-    func constructPhotoURL() {
-        
+    func getThumbnail(photoMetaData: PhotoMetaData, completion: @escaping (UIImage?) -> Void) {
+        guard let url = URL(string: photoMetaData.squareThumbnailURLString) else { completion(nil); return }
+        getPhoto(withURL: url) { (image) in
+            completion(image)
+            return
+        }
     }
     
     func getPhoto(withURL url: URL, completion: @escaping (UIImage?) -> Void) {

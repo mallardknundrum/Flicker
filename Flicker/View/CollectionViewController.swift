@@ -8,21 +8,32 @@
 
 import UIKit
 
-class CollectionViewController: UICollectionViewController, UISearchResultsUpdating {
+class CollectionViewController: UICollectionViewController, UISearchResultsUpdating, UISearchBarDelegate {
     
-    
+    // MARK: Properties
     
     var searchController: UISearchController?
     var photoMetaDataArray: [PhotoMetaData] = []
-    var backButton: UIBarButtonItem?
+    var resultsArray: [PhotoMetaData] = []
+    
+    // MARK: outlets
+    
+    @IBAction func interestingButtonTapped(_ sender: Any) {
+        resultsArray = []
+        DispatchQueue.main.async {
+            self.collectionView?.reloadData()
+        }
+    }
+    
+    // MARK: lifecycle functions
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         setUpSearchController()
         setUpCollectionView()
         let extras = "description,date_upload,date_taken,owner_name,last_update,tags,machine_tags,o_dims,views,media,path_alias,url_sq,url_l,url_o"
         let parameters = ["username": "Jeremiah", "extras": extras]
+        // call api to return metadata for the top interesting photos
         NetworkController().performRequest(for: .getPopular, httpMethod: .Get, urlParameters: parameters, body: nil) { (data, error) in
             var photoMetaArray: [PhotoMetaData] = []
             if let data = data {
@@ -42,18 +53,6 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
                 print(error.localizedDescription)
             }
         }
-        
-        
-        let searchBar = searchController?.searchBar
-        searchBar?.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        if let sb = searchBar {
-            self.collectionView?.addSubview(sb)
-        }
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        self.collectionView?.reloadInputViews()
     }
 
     // MARK: - Navigation
@@ -62,7 +61,7 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
         if let vc = segue.destination as? FlickrDetailTableViewController,
             let cell = sender as? UICollectionViewCell,
             let indexPath = self.collectionView?.indexPath(for: cell) {
-            vc.photoMetaData = self.photoMetaDataArray[indexPath.row]
+            vc.photoMetaData = !resultsArray.isEmpty ?  self.resultsArray[indexPath.row] : self.photoMetaDataArray[indexPath.row]
         }
     }
 
@@ -73,40 +72,53 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
     }
 
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return photoMetaDataArray.count
+        // if resultsArray is empty, it is displaying the search results, if not, its displaying the main interesting feed
+        return !resultsArray.isEmpty ? resultsArray.count : photoMetaDataArray.count
     }
 
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "flickrCollectionViewCell", for: indexPath) as? FlickrCollectionViewCell else { return UICollectionViewCell() }
-        cell.photoMetaData = self.photoMetaDataArray[indexPath.row]
-        cell.setUpViews()
+        
+        // if resultsArray is empty, it is displaying the search results, if not, its displaying the main interesting feed
+        if !resultsArray.isEmpty {
+            let meta = resultsArray[indexPath.row]
+            cell.photoMetaData = meta
+            DispatchQueue.global().async {
+                PhotoMetaDataController.singleton.getThumbnail(photoMetaData: meta, completion: { (image) in
+                    DispatchQueue.main.async {
+                        cell.imageView.image = image
+                    }
+                })
+            }
+        } else {
+            let meta = photoMetaDataArray[indexPath.row]
+            cell.photoMetaData = meta
+            DispatchQueue.global().async {
+                PhotoMetaDataController.singleton.getThumbnail(photoMetaData: meta, completion: { (image) in
+                    DispatchQueue.main.async {
+                        cell.imageView.image = image
+                    }
+                })
+                
+            }
+        }
         return cell
     }
     
     
-
     
-    private func setUpSearchController() {
-        let resultsController = UIStoryboard(name: "Main", bundle: nil).instantiateViewController(withIdentifier: "SearchResultsCollectionViewController")
-        searchController = UISearchController(searchResultsController: resultsController)
-        searchController?.searchResultsUpdater = self
-        searchController?.searchBar.sizeToFit()
-        searchController?.hidesNavigationBarDuringPresentation = false
-        navigationItem.searchController = searchController
-//        searchController?.searchResultsController?.navigationItem.backBarButtonItem?.isEnabled = true
-//        searchController?.searchResultsController?.navigationItem.hidesBackButton = false
-        
-        definesPresentationContext = true
-    }
+    
+    //MARK: UISearchResultsUpdating methods
     
     func updateSearchResults(for searchController: UISearchController) {
+        guard isSearching() else { return }
         self.navigationItem.hidesBackButton = false
-        if let resultsViewController = searchController.searchResultsController as? SearchResultsCollectionViewController, let searchTerm = searchController.searchBar.text {
-            // call api to search for user
+        if let searchTerm = searchController.searchBar.text {
+            // call api to search for user in the search bar
             let parameters = ["username": searchTerm]
             NetworkController().performRequest(for: .searchForUser, httpMethod: .Get, urlParameters: parameters, body: nil, completion: { (data, error) in
                 if let error = error {
-                    
+                    print(error.localizedDescription)
                 }
                 if let data = data {
                     guard let json = (try? JSONSerialization.jsonObject(with: data, options: .allowFragments)) as? [String: Any],
@@ -114,22 +126,23 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
                         let nsid = userDictionary["nsid"] as? String else { return }
                     let extras = "description,date_upload,date_taken,owner_name,last_update,tags,machine_tags,o_dims,views,media,path_alias,url_sq,url_l,url_o"
                     let parameters = ["user_id": nsid, "extras": extras]
+                    // call api to get metadata for public photos that the user has
                     NetworkController().performRequest(for: .getPhotosForUser, httpMethod: .Get, urlParameters: parameters, body: nil, completion: { (data, error) in
                         if let error = error {
-                            
+                            print(error.localizedDescription)
                         }
-                        if let data = data {
+                        if let data = data, self.isSearching() {
                             if let json = (try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as? [String: Any]){
-                                guard let photos = json?["photos"] as? [String: Any], let photosDictionary = photos["photo"] as? [[String: Any]], let resultsViewController = searchController.searchResultsController as? SearchResultsCollectionViewController else { return }
+                                guard let photos = json?["photos"] as? [String: Any], let photosDictionary = photos["photo"] as? [[String: Any]] else { return }
                                 var photoMetaArray: [PhotoMetaData] = []
                                 for photo in photosDictionary {
-                                    guard let photoMeta = PhotoMetaData(jsonDictionary: photo) else { return }
-                                    photoMetaArray.append(photoMeta)
-                                    resultsViewController.resultsArray = photoMetaArray
-                                    DispatchQueue.main.async {
-                                        resultsViewController.collectionView?.reloadData()
+                                    if let photoMeta = PhotoMetaData(jsonDictionary: photo) {
+                                        photoMetaArray.append(photoMeta)
                                     }
-                                    print(photoMeta.title)
+                                }
+                                self.resultsArray = photoMetaArray
+                                DispatchQueue.main.async {
+                                    self.collectionView?.reloadData()
                                 }
                             }
                         }
@@ -137,6 +150,28 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
                 }
             })
         }
+    }
+    
+    // MARK: Search Bar Delegate
+    func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
+        searchBar.endEditing(true)
+        searchBar.resignFirstResponder()
+        DispatchQueue.main.async {
+            self.resultsArray = []
+            self.collectionView?.reloadData()
+        }
+    }
+    
+    //MARK: Setup and helper functions
+    
+    private func setUpSearchController() {
+        searchController = UISearchController(searchResultsController: nil)
+        searchController?.searchResultsUpdater = self
+        searchController?.searchBar.sizeToFit()
+        searchController?.hidesNavigationBarDuringPresentation = false
+        searchController?.searchBar.delegate = self
+        navigationItem.searchController = searchController
+        definesPresentationContext = true
     }
     
     func setUpCollectionView() {
@@ -148,5 +183,10 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
         )
         collectionView?.collectionViewLayout = columnLayout
         collectionView?.contentInsetAdjustmentBehavior = .always
+    }
+    
+    func isSearching() -> Bool {
+        guard let searchController = searchController,  let text = searchController.searchBar.text else { return false }
+        return searchController.isActive && !text.isEmpty
     }
 }

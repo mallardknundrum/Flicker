@@ -13,14 +13,6 @@ class FlickrImageTableViewCell: UITableViewCell {
     var imageURLString: String?
     
     @IBOutlet weak var flickrImageView: UIImageView!
-    
-    override func awakeFromNib() {
-        super.awakeFromNib()
-    }
-
-    override func setSelected(_ selected: Bool, animated: Bool) {
-        super.setSelected(selected, animated: animated)
-    }
 
     func setUpViews() {
         DispatchQueue.global().async {
