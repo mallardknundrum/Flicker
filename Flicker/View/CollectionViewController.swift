@@ -111,9 +111,7 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
     //MARK: UISearchResultsUpdating methods
     
     func updateSearchResults(for searchController: UISearchController) {
-        DispatchQueue.main.async {
-            guard self.isSearching() else { return }
-        }
+        guard isSearching() else { return }
         self.navigationItem.hidesBackButton = false
         if let searchTerm = searchController.searchBar.text {
             // call api to search for user in the search bar
@@ -133,10 +131,7 @@ class CollectionViewController: UICollectionViewController, UISearchResultsUpdat
                         if let error = error {
                             print(error.localizedDescription)
                         }
-                        if let data = data {
-                            DispatchQueue.main.async {
-                                guard self.isSearching() else { return }
-                            }
+                        if let data = data, self.isSearching() {
                             if let json = (try? JSONSerialization.jsonObject(with: data, options: JSONSerialization.ReadingOptions.allowFragments) as? [String: Any]){
                                 guard let photos = json?["photos"] as? [String: Any], let photosDictionary = photos["photo"] as? [[String: Any]] else { return }
                                 var photoMetaArray: [PhotoMetaData] = []
